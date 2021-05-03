@@ -24,11 +24,16 @@ class FriendlyChatApp extends StatelessWidget {
 }
 
 class ChatMessage extends StatelessWidget {
-  ChatMessage({required this.text});
+  ChatMessage({required this.text, required this.animationController});
   final String text;
+  final AnimationController animationController;
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizeTransition(             
+      sizeFactor:                      
+          CurvedAnimation(parent: animationController, curve: Curves.easeOut),  
+      axisAlignment: 0.0,              
+      child: Container(
       margin: EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,6 +54,7 @@ class ChatMessage extends StatelessWidget {
           ),
         ],
       ),
+    )
     );
   }
 }
@@ -58,20 +64,25 @@ class Chatscreen extends StatefulWidget {
   _ChatscreenState createState() => _ChatscreenState();
 }
 
-class _ChatscreenState extends State<Chatscreen> {
+class _ChatscreenState extends State<Chatscreen> with TickerProviderStateMixin {
   final List<ChatMessage> _messages = [];
   final _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
   void _handleSubmitted(String text) {
     _textController.clear();
-    ChatMessage message = ChatMessage(
+    var message = ChatMessage(
       text: text,
+      animationController: AnimationController(
+        duration: const Duration(milliseconds: 700),
+        vsync: this,
+      ),
     );
     setState((){
       _messages.insert(0, message);
     });
     _focusNode.requestFocus();
+    message.animationController.forward();
   }
 
   @override
@@ -126,6 +137,14 @@ class _ChatscreenState extends State<Chatscreen> {
         ),                                     
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    for (var message in _messages){
+      message.animationController.dispose();
+    }
+    super.dispose();
   }
 
 
